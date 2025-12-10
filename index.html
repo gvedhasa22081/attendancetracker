@@ -423,7 +423,7 @@
           SMART FACE ATTENDANCE
         </div>
         <div class="subtitle">
-          Real-time face recognition attendance – only known students are allowed to mark present.
+          Real-time face recognition attendance – only registered students can mark present.
         </div>
       </div>
       <div class="badge" id="modelStatusBadge">
@@ -439,7 +439,7 @@
           <div>
             <div class="card-title">Camera & Face Recognition</div>
             <div class="card-subtitle">
-              Start the camera and stand in front of it. If your face matches a registered student photo,
+              Start the camera and face it. If your face matches a registered student photo,
               your attendance will be marked automatically.
             </div>
           </div>
@@ -457,7 +457,7 @@
               <span id="cameraStatusText">Camera idle</span>
             </div>
             <span style="font-size:10px;opacity:0.8;">
-              Tip: keep only one face visible & allow camera permission when asked.
+              Tip: allow camera permission & keep one face visible for best accuracy.
             </span>
           </div>
         </div>
@@ -469,7 +469,7 @@
         </div>
 
         <p class="hint">
-          If the camera does not start, check browser settings → Site permissions → Camera → <b>Allow</b>.
+          If camera doesn't start: Chrome menu → Settings → Privacy & Security → Site settings → Camera → allow for your GitHub Pages URL.
         </p>
 
         <div id="messageBox"></div>
@@ -481,7 +481,7 @@
           <div>
             <div class="card-title">Attendance Dashboard</div>
             <div class="card-subtitle">
-              Live present / pending list with latest attendance time.
+              Live list of present vs pending students with latest attendance time.
             </div>
           </div>
           <div class="pill" id="lastMarkedPill">Last marked: —</div>
@@ -499,7 +499,7 @@
           <div class="dash-card">
             <div class="dash-header">
               <div class="dash-title">⏳ Pending Students</div>
-              <div class="dash-count" id="pendingCount">0 pending</div>
+              <div class="dash-count" id="pendingCount">5 pending</div>
             </div>
             <div class="list" id="pendingList"></div>
           </div>
@@ -516,11 +516,11 @@
     </div>
   </div>
 
-  <!-- face-api.js -->
+  <!-- face-api.js from CDN -->
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
   <script>
-    // ========= CONFIG =========
+    // ======== CONFIG: Students ========
     const students = [
       { name: "Keerthana", file: "students/Keerthana.jpeg" },
       { name: "Hari Chandana", file: "students/Hari_Chandana.jpeg" },
@@ -532,7 +532,7 @@
     let present = [];
     let pending = students.map(s => s.name);
 
-    // ========= DOM ELEMENTS =========
+    // ======== DOM ELEMENTS ========
     const video = document.getElementById("video");
     const overlay = document.getElementById("overlay");
     const ctx = overlay.getContext("2d");
@@ -554,7 +554,7 @@
     const cameraDot = document.getElementById("cameraDot");
     const cameraStatusText = document.getElementById("cameraStatusText");
 
-    // ========= STATE =========
+    // ======== STATE ========
     let stream = null;
     let detectionIntervalId = null;
     let faceMatcher = null;
@@ -565,7 +565,7 @@
     const RECENT_COOLDOWN_MS = 3000;
     const recentMarked = new Map(); // name -> timestamp
 
-    // ========= UI HELPERS =========
+    // ======== UI HELPERS ========
     function updateDashboard() {
       presentList.innerHTML = "";
       present.forEach(name => {
@@ -619,7 +619,7 @@
       }
     }
 
-    // ========= ATTENDANCE =========
+    // ======== ATTENDANCE ========
     function markAttendance(name) {
       if (!pending.includes(name)) return;
 
@@ -651,7 +651,7 @@
       clearMessage();
     }
 
-    // ========= MODELS & FACES =========
+    // ======== MODEL LOADING ========
     async function loadModelsAndFaces() {
       try {
         setModelStatus("Models loading…", "");
@@ -670,7 +670,7 @@
             .withFaceDescriptor();
 
           if (!det) {
-            console.warn("No face found in reference image for:", s.name);
+            console.warn("No face in reference image for:", s.name);
             continue;
           }
 
@@ -687,18 +687,18 @@
         setModelStatus("Model error – check /models folder", "error");
         showMessage(
           "error",
-          "Could not load face recognition models from the /models folder.",
+          "Could not load face recognition models from /models. Please recheck file names.",
           "Model load failed"
         );
       }
     }
 
-    // ========= CAMERA & DETECTION =========
+    // ======== CAMERA + DETECTION ========
     async function startCamera() {
       if (!modelsLoaded) {
         showMessage(
           "error",
-          "Please wait until the badge at top right becomes green: 'Models loaded · Ready ✔'.",
+          "Wait until the top-right badge becomes green: 'Models loaded · Ready ✔'.",
           "Models not ready"
         );
         return;
@@ -798,12 +798,12 @@
       }, DETECTION_INTERVAL_MS);
     }
 
-    // ========= EVENTS =========
+    // ======== EVENTS ========
     startBtn.addEventListener("click", startCamera);
     stopBtn.addEventListener("click", stopCamera);
     resetBtn.addEventListener("click", resetAttendance);
 
-    // ========= INIT =========
+    // ======== INIT ========
     updateDashboard();
     setCameraStatus(false, "Camera idle");
     loadModelsAndFaces();

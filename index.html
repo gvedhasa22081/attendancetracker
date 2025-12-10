@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Face Attendance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      flex-direction: column;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1200px;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      padding: 20px 24px 24px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title span.logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 15px #22c55e;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .badge {
+      background: rgba(37, 99, 235, 0.15);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), rgba(15, 23, 42, 0.95));
+      border-radius: 16px;
+      padding: 14px 14px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title small {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.7;
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .video-wrapper {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #020617;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      aspect-ratio: 4 / 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .status-overlay {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .status-pill {
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+    }
+
+    .status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #ef4444;
+    }
+
+    .status-pill.active .dot {
+      background: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+    }
+
+    .btn-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #3b82f6, #22c55e);
+      color: white;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+    }
+
+    button.secondary {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.7);
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .msg {
+      margin-top: 10px;
+      font-size: 13px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+    }
+
+    .msg span.label {
+      font-size: 11px;
+      opacity: 0.7;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .msg.success {
+      border-color: rgba(34, 197, 94, 0.8);
+    }
+
+    .msg.error {
+      border-color: rgba(239, 68, 68, 0.9);
+    }
+
+    .msg .name-highlight {
+      font-weight: 700;
+      color: #bbf7d0;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 700px) {
+      .dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .dash-card {
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 14px;
+      padding: 10px 10px 11px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      max-height: 260px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+      gap: 6px;
+    }
+
+    .dash-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .dash-count {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+
+    .list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-top: 3px;
+    }
+
+    .list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .list::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.5);
+      border-radius: 999px;
+    }
+
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 7px;
+      border-radius: 9px;
+      font-size: 12px;
+      margin-bottom: 3px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(75, 85, 99, 0.45);
+    }
+
+    .list-item span.name {
+      font-weight: 500;
+    }
+
+    .list-item span.meta {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+
+    .list-item.present {
+      border-color: rgba(34, 197, 94, 0.85);
+    }
+
+    .tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.7);
+      margin-left: 6px;
+    }
+
+    .info-text {
+      font-size: 11px;
+      opacity: 0.75;
+      margin-top: 8px;
+      line-height: 1.3;
+    }
+
+    .face-support {
+      margin-top: 8px;
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    .face-support span {
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .face-support .ok {
+      border-color: rgba(34, 197, 94, 0.8);
+      color: #bbf7d0;
+    }
+
+    .face-support .warn {
+      border-color: rgba(234, 179, 8, 0.9);
+      color: #fef9c3;
+    }
+
+    .footer-note {
+      margin-top: 10px;
+      font-size: 10px;
+      opacity: 0.65;
+      text-align: right;
+    }
+
+    /* ⭐ Developer Footer ⭐ */
+    .dev-footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px;
+      opacity: 0.85;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div>
+        <div class="title">
+          <span class="logo-dot"></span>
+          Smart Face Attendance
+        </div>
+        <div class="subtitle">Real-time attendance taker using webcam & smart dashboards</div>
+      </div>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Demo | Frontend-Only | No backend
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: CAMERA -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">
+            Camera & Face Detection
+            <small>Starts webcam, detects a face and marks random pending student present.</small>
+          </div>
+          <span class="pill" id="studentCountPill">Students: 0</span>
+        </div>
+
+        <div class="video-wrapper">
+          <video id="video" autoplay playsinline></video>
+          <div class="status-overlay">
+            <div class="status-pill" id="cameraStatus">
+              <span class="dot"></span>
+              <span id="cameraStatusText">Camera idle</span>
+            </div>
+            <span style="font-size: 10px; opacity: 0.8;">Face event ➜ Random pending name ➜ Mark present</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="startBtn">▶ Start Camera</button>
+          <button class="secondary" id="stopBtn" disabled>■ Stop Camera</button>
+          <button class="secondary" id="manualBtn">✋ Mark Attendance Manually</button>
+        </div>
+
+        <p class="hint">Tip: Stand in front of the camera. If a face is detected, attendance is taken automatically.</p>
+
+        <div id="messageBox" class="msg" style="display:none;"></div>
+
+        <p class="face-support" id="faceSupportMsg">Checking face detection support…</p>
+      </section>
+
+      <!-- RIGHT: DASHBOARDS -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">
+            Attendance Dashboards
+            <small>Who has taken attendance vs who is still pending.</small>
+          </div>
+          <span class="pill" id="summaryPill">Present: 0 · Pending: 0</span>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dash-card">
+            <div class="dash-header">
+              <div class="dash-title">✅ Present Students</div>
+              <div class="dash-count" id="presentCount">0 marked</div>
+            </div>
+            <div class="list" id="presentList"></div>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-header">
+              <div class="dash-title">⏳ Pending Students</div>
+              <div class="dash-count" id="pendingCount">0 pending</div>
+            </div>
+            <div class="list" id="pendingList"></div>
+          </div>
+        </div>
+
+        <p class="info-text">
+          This is a frontend-only demo. Edit the <code>students</code> array inside the code to change student names.
+        </p>
+      </section>
+    </div>
+
+    <div class="footer-note">Edit the <strong>allStudents</strong> array to use your class list.</div>
+  </div>
+
+  <!-- ⭐ Developer Footer Section ⭐ -->
+  <div class="dev-footer">
+    Developed by <strong>Keerthana</strong> and <strong>Hari Chandhana</strong>
+  </div>
+
+  <script>
+    const allStudents = [
+      "Vani", "Rahul", "Aisha", "Kiran", "Meena",
+      "Rohit", "Deepak", "Sita", "Arjun", "Priya"
+    ];
+
+    let presentStudents = [];
+    let pendingStudents = [...allStudents];
+
+    const video = document.getElementById("video");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const manualBtn = document.getElementById("manualBtn");
+    const messageBox = document.getElementById("messageBox");
+    const presentList = document.getElementById("presentList");
+    const pendingList = document.getElementById("pendingList");
+    const presentCount = document.getElementById("presentCount");
+    const pendingCount = document.getElementById("pendingCount");
+    const summaryPill = document.getElementById("summaryPill");
+    const studentCountPill = document.getElementById("studentCountPill");
+    const cameraStatus = document.getElementById("cameraStatus");
+    const cameraStatusText = document.getElementById("cameraStatusText");
+    const faceSupportMsg = document.getElementById("faceSupportMsg");
+
+    let stream = null;
+    let detector = null;
+    let detectionActive = false;
+    let lastAttendanceTime = 0;
+    const ATTENDANCE_COOLDOWN_MS = 3500;
+
+    function updateDashboards() {
+      presentList.innerHTML = "";
+      presentStudents.forEach(entry => {
+        const li = document.createElement("div");
+        li.className = "list-item present";
+        li.innerHTML = `<span class="name">${entry.name}</span>
+        <span class="meta">${entry.time}<span class="tag">Taken</span></span>`;
+        presentList.appendChild(li);
+      });
+
+      pendingList.innerHTML = "";
+      pendingStudents.forEach(name => {
+        const li = document.createElement("div");
+        li.className = "list-item";
+        li.innerHTML = `<span class="name">${name}</span>
+        <span class="meta">Waiting…</span>`;
+        pendingList.appendChild(li);
+      });
+
+      presentCount.textContent = `${presentStudents.length} marked`;
+      pendingCount.textContent = `${pendingStudents.length} pending`;
+      summaryPill.textContent = `Present: ${presentStudents.length} · Pending: ${pendingStudents.length}`;
+      studentCountPill.textContent = `Students: ${allStudents.length}`;
+    }
+
+    function showMessage(type, text, label = "Status") {
+      messageBox.style.display = "block";
+      messageBox.className = "msg " + (type === "success" ? "success" : "error");
+      messageBox.innerHTML = `<span class="label">${label}</span>${text}`;
+    }
+
+    function clearMessage() {
+      messageBox.style.display = "none";
+    }
+
+    function setCameraStatus(active, text) {
+      cameraStatus.classList.toggle("active", active);
+      cameraStatusText.textContent = text;
+    }
+
+    function formatTime() {
+      const now = new Date();
+      return `${now.getHours().toString().padStart(2,"0")}:${now.getMinutes().toString().padStart(2,"0")}:${now.getSeconds().toString().padStart(2,"0")}`;
+    }
+
+    function markRandomPendingStudent(source="Face Detection") {
+      if (pendingStudents.length === 0) {
+        showMessage("error", "All students have been marked present 🎉", "No pending");
+        return;
+      }
+      const index = Math.floor(Math.random() * pendingStudents.length);
+      const name = pendingStudents[index];
+      pendingStudents.splice(index, 1);
+      const time = formatTime();
+      presentStudents.push({ name, time, source });
+      updateDashboards();
+      showMessage("success", 
+        `Attendance taken successfully for <span class="name-highlight">${name}</span> at ${time}.<br><small>Marked by: ${source}</small>`,
+        "Attendance recorded"
+      );
+    }
+
+    async function initFaceDetector() {
+      if ("FaceDetector" in window) {
+        detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 3 });
+        faceSupportMsg.innerHTML = `<span class="ok">FaceDetector supported ✔</span>`;
+      } else {
+        detector = null;
+        faceSupportMsg.innerHTML = `<span class="warn">FaceDetector NOT supported ❗ Use manual button.</span>`;
+      }
+    }
+
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        setCameraStatus(true, "Camera active");
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        clearMessage();
+
+        if (detector) {
+          detectionActive = true;
+          detectLoop();
+        }
+      } catch (err) {
+        showMessage("error", "Camera permission denied.", "Camera Error");
+      }
+    }
+
+    function stopCamera() {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      detectionActive = false;
+      video.srcObject = null;
+      setCameraStatus(false, "Camera stopped");
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    }
+
+    async function detectLoop() {
+      if (!detectionActive || !detector) return;
+      try {
+        const faces = await detector.detect(video);
+        const now = Date.now();
+        if (faces.length > 0 && now - lastAttendanceTime > ATTENDANCE_COOLDOWN_MS) {
+          lastAttendanceTime = now;
+          markRandomPendingStudent("Face Detection");
+        }
+      } catch {}
+      requestAnimationFrame(detectLoop);
+    }
+
+    startBtn.addEventListener("click", startCamera);
+    stopBtn.addEventListener("click", stopCamera);
+    manualBtn.addEventListener("click", () => markRandomPendingStudent("Manual"));
+
+    updateDashboards();
+    initFaceDetector();
+  </script>
+</body>
+</html>

@@ -1,229 +1,812 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>SMART FACE ATTENDANCE SYSTEM</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Smart Face Attendance System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
     body {
-        margin: 0;
-        padding: 0;
-        background: #0f172a;
-        color: white;
-        font-family: Arial, sans-serif;
-        text-align: center;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, #1d4ed8 0, #020617 45%, #020617 100%);
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px 10px 30px;
     }
 
-    h1 {
-        margin-top: 25px;
-        color: #4ade80;
-        font-size: 32px;
+    .app {
+      width: 100%;
+      max-width: 1200px;
+      background: linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.9));
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.85),
+        0 0 0 1px rgba(15, 23, 42, 0.7);
+      padding: 16px 16px 20px;
     }
 
-    #cameraBox {
-        width: 70%;
-        height: 350px;
-        border: 3px solid #4ade80;
-        border-radius: 15px;
-        margin: 25px auto;
-        position: relative;
-        overflow: hidden;
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 800px) {
+      .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .title-main {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 18px #22c55e;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .badge {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(129, 140, 248, 0.95);
+      background:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.35), rgba(15,23,42,0.96));
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #f97316;
+      box-shadow: 0 0 12px #f97316;
+    }
+
+    .badge-dot.ready {
+      background: #22c55e;
+      box-shadow: 0 0 12px #22c55e;
+    }
+
+    .badge-dot.error {
+      background: #ef4444;
+      box-shadow: 0 0 12px #ef4444;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), rgba(15,23,42,0.98));
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      padding: 12px 12px 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .card-subtitle {
+      font-size: 11px;
+      opacity: 0.78;
+      margin-top: 2px;
+    }
+
+    .pill {
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    /* CAMERA AREA */
+    .camera-wrapper {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: #020617;
+      position: relative;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 15px;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.1);
     }
 
     canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
-    #message {
-        margin-top: 20px;
-        padding: 12px;
-        border-radius: 10px;
-        width: 60%;
-        margin-left: auto;
-        margin-right: auto;
-        display: none;
-        font-size: 18px;
+    .scan-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      box-shadow: inset 0 0 40px rgba(34, 197, 94, 0.18);
+      pointer-events: none;
     }
 
-    .success { background: #14532d; border: 1px solid #4ade80; }
-    .error   { background: #450a0a; border: 1px solid #ef4444; }
-
-    .container {
-        margin-top: 40px;
-        display: flex;
-        justify-content: space-around;
-        flex-wrap: wrap;
+    .status-bar {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(18px);
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 999px;
+      padding: 5px 9px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 11px;
     }
 
-    .box {
-        background: #1e293b;
-        width: 40%;
-        min-width: 280px;
-        padding: 25px;
-        border-radius: 12px;
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
     }
 
-    .present { font-size: 22px; color: #4ade80; margin-bottom: 10px; }
-    .pending { font-size: 22px; color: #facc15; margin-bottom: 10px; }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #ef4444;
+      box-shadow: 0 0 10px #ef4444;
+    }
 
-    ul { list-style: none; padding: 0; font-size: 18px; text-align: left; }
-    li { margin: 5px 0; }
+    .status-dot.on {
+      background: #22c55e;
+      box-shadow: 0 0 12px #22c55e;
+    }
 
-</style>
+    /* BUTTONS */
+    .controls {
+      margin-top: 9px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      color: white;
+      box-shadow: 0 10px 26px rgba(34, 197, 94, 0.45);
+    }
+
+    button.secondary {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+    }
+
+    button.danger {
+      background: rgba(185, 28, 28, 0.92);
+      color: #fee2e2;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.85);
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    /* MESSAGE BOX */
+    #messageBox {
+      margin-top: 8px;
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.96);
+      display: none;
+    }
+
+    #messageBox.success {
+      border-color: rgba(34, 197, 94, 0.9);
+      box-shadow: 0 0 18px rgba(34, 197, 94, 0.32);
+    }
+
+    #messageBox.error {
+      border-color: rgba(239, 68, 68, 0.9);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
+    }
+
+    .msg-label {
+      display: block;
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 2px;
+    }
+
+    .msg-name {
+      font-weight: 700;
+      color: #bbf7d0;
+    }
+
+    /* DASHBOARDS */
+    .dashboards {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .dashboards {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .dash-card {
+      background: rgba(15, 23, 42, 0.98);
+      border-radius: 14px;
+      padding: 9px 9px 11px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      max-height: 250px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+
+    .dash-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .dash-count {
+      font-size: 11px;
+      opacity: 0.78;
+    }
+
+    .list {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 4px;
+      padding-right: 3px;
+      font-size: 13px;
+    }
+
+    .list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .list::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.7);
+      border-radius: 999px;
+    }
+
+    .list-item {
+      padding: 5px 7px;
+      border-radius: 9px;
+      border: 1px solid rgba(75, 85, 99, 0.85);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .list-item.present {
+      border-color: rgba(34, 197, 94, 0.98);
+      background: rgba(21, 128, 61, 0.11);
+    }
+
+    .list-name {
+      font-weight: 500;
+    }
+
+    .list-meta {
+      font-size: 11px;
+      opacity: 0.82;
+    }
+
+    .footer {
+      margin-top: 10px;
+      font-size: 11px;
+      opacity: 0.75;
+      text-align: right;
+    }
+
+    .dev-footer {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="app">
+    <header class="app-header">
+      <div>
+        <div class="title-main">
+          <span class="title-dot"></span>
+          SMART FACE ATTENDANCE
+        </div>
+        <div class="subtitle">
+          Real-time face recognition attendance – only known students are allowed to mark present.
+        </div>
+      </div>
+      <div class="badge" id="modelStatusBadge">
+        <span class="badge-dot" id="modelDot"></span>
+        <span id="modelStatusText">Models loading…</span>
+      </div>
+    </header>
 
-<h1>SMART FACE ATTENDANCE SYSTEM</h1>
-<p>Face Recognition will automatically mark attendance for registered students.</p>
+    <div class="grid">
+      <!-- LEFT: Camera & Controls -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Camera & Face Recognition</div>
+            <div class="card-subtitle">
+              Start the camera and stand in front of it. If your face matches a registered student photo,
+              your attendance will be marked automatically.
+            </div>
+          </div>
+          <div class="pill" id="summaryPill">Present: 0 · Pending: 0</div>
+        </div>
 
-<!-- CAMERA AREA -->
-<div id="cameraBox">
-    <video id="video" autoplay muted></video>
-    <canvas id="canvas"></canvas>
-</div>
+        <div class="camera-wrapper">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          <div class="scan-glow"></div>
 
-<div id="message"></div>
+          <div class="status-bar">
+            <div class="status-pill">
+              <span class="status-dot" id="cameraDot"></span>
+              <span id="cameraStatusText">Camera idle</span>
+            </div>
+            <span style="font-size:10px;opacity:0.8;">
+              Tip: keep only one face visible & allow camera permission when asked.
+            </span>
+          </div>
+        </div>
 
-<div class="container">
-    <div class="box">
-        <div class="present">Present Students</div>
-        <ul id="presentList"></ul>
+        <div class="controls">
+          <button class="primary" id="startBtn">▶ Start Camera</button>
+          <button class="secondary" id="stopBtn" disabled>■ Stop Camera</button>
+          <button class="danger" id="resetBtn">↻ Reset Attendance</button>
+        </div>
+
+        <p class="hint">
+          If the camera does not start, check browser settings → Site permissions → Camera → <b>Allow</b>.
+        </p>
+
+        <div id="messageBox"></div>
+      </section>
+
+      <!-- RIGHT: Dashboards -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Attendance Dashboard</div>
+            <div class="card-subtitle">
+              Live present / pending list with latest attendance time.
+            </div>
+          </div>
+          <div class="pill" id="lastMarkedPill">Last marked: —</div>
+        </div>
+
+        <div class="dashboards">
+          <div class="dash-card">
+            <div class="dash-header">
+              <div class="dash-title">✅ Present Students</div>
+              <div class="dash-count" id="presentCount">0 marked</div>
+            </div>
+            <div class="list" id="presentList"></div>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-header">
+              <div class="dash-title">⏳ Pending Students</div>
+              <div class="dash-count" id="pendingCount">0 pending</div>
+            </div>
+            <div class="list" id="pendingList"></div>
+          </div>
+        </div>
+
+        <div class="footer">
+          Registered faces: Keerthana · Hari Chandana · Vedha Sai G · Ajith Kumar · Shiva Narayana
+        </div>
+      </section>
     </div>
 
-    <div class="box">
-        <div class="pending">Pending Students</div>
-        <ul id="pendingList"></ul>
+    <div class="dev-footer">
+      Developed by <strong>Keerthana</strong> &amp; <strong>Hari Chandhana</strong>
     </div>
-</div>
+  </div>
 
-<p style="margin-top:40px;opacity:0.6;">Developed by <b>Keerthana</b> & <b>Hari Chandhana</b></p>
+  <!-- face-api.js -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <script>
+    // ========= CONFIG =========
+    const students = [
+      { name: "Keerthana", file: "students/Keerthana.jpeg" },
+      { name: "Hari Chandana", file: "students/Hari_Chandana.jpeg" },
+      { name: "Vedha Sai G", file: "students/Vedha_Sai_G.jpeg" },
+      { name: "Ajith Kumar", file: "students/Ajith_Kumar.jpeg" },
+      { name: "Shiva Narayana", file: "students/Shiva_Narayana.jpeg" }
+    ];
 
-<script>
+    let present = [];
+    let pending = students.map(s => s.name);
 
-// STUDENT LIST
-const students = [
-    { name: "Keerthana", file: "students/Keerthana.jpeg" },
-    { name: "Hari Chandana", file: "students/Hari_Chandana.jpeg" },
-    { name: "Vedha Sai G", file: "students/Vedha_Sai_G.jpeg" },
-    { name: "Ajith Kumar", file: "students/Ajith_Kumar.jpeg" },
-    { name: "Shiva Narayana", file: "students/Shiva_Narayana.jpeg" }
-];
+    // ========= DOM ELEMENTS =========
+    const video = document.getElementById("video");
+    const overlay = document.getElementById("overlay");
+    const ctx = overlay.getContext("2d");
 
-let present = [];
-let pending = students.map(s => s.name);
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const resetBtn = document.getElementById("resetBtn");
 
-function updateLists() {
-    document.getElementById("presentList").innerHTML =
-        present.map(s => `<li>${s} ✔</li>`).join("");
+    const messageBox = document.getElementById("messageBox");
+    const presentList = document.getElementById("presentList");
+    const pendingList = document.getElementById("pendingList");
+    const presentCount = document.getElementById("presentCount");
+    const pendingCount = document.getElementById("pendingCount");
+    const summaryPill = document.getElementById("summaryPill");
+    const lastMarkedPill = document.getElementById("lastMarkedPill");
 
-    document.getElementById("pendingList").innerHTML =
-        pending.map(s => `<li>${s} ⏳</li>`).join("");
-}
+    const modelDot = document.getElementById("modelDot");
+    const modelStatusText = document.getElementById("modelStatusText");
+    const cameraDot = document.getElementById("cameraDot");
+    const cameraStatusText = document.getElementById("cameraStatusText");
 
-updateLists();
+    // ========= STATE =========
+    let stream = null;
+    let detectionIntervalId = null;
+    let faceMatcher = null;
+    let modelsLoaded = false;
 
-// Show Message
-function showMessage(type, text) {
-    let box = document.getElementById("message");
-    box.className = type;
-    box.innerHTML = text;
-    box.style.display = "block";
-}
+    const MATCH_THRESHOLD = 0.45;
+    const DETECTION_INTERVAL_MS = 400;
+    const RECENT_COOLDOWN_MS = 3000;
+    const recentMarked = new Map(); // name -> timestamp
 
-// Load Models
-Promise.all([
-    faceapi.nets.tinyFaceDetector.loadFromUri("models"),
-    faceapi.nets.faceLandmark68Net.loadFromUri("models"),
-    faceapi.nets.faceRecognitionNet.loadFromUri("models")
-]).then(loadStudentFaces);
+    // ========= UI HELPERS =========
+    function updateDashboard() {
+      presentList.innerHTML = "";
+      present.forEach(name => {
+        const div = document.createElement("div");
+        div.className = "list-item present";
+        div.innerHTML = `
+          <span class="list-name">${name}</span>
+          <span class="list-meta">Marked ✔</span>
+        `;
+        presentList.appendChild(div);
+      });
 
-// Load Student Descriptors
-async function loadStudentFaces() {
-    const labeledDescriptors = [];
+      pendingList.innerHTML = "";
+      pending.forEach(name => {
+        const div = document.createElement("div");
+        div.className = "list-item";
+        div.innerHTML = `
+          <span class="list-name">${name}</span>
+          <span class="list-meta">Waiting…</span>
+        `;
+        pendingList.appendChild(div);
+      });
 
-    for (let student of students) {
-        const img = await faceapi.fetchImage(student.file);
-
-        const det = await faceapi.detectSingleFace(
-            img, new faceapi.TinyFaceDetectorOptions()
-        ).withFaceLandmarks().withFaceDescriptor();
-
-        labeledDescriptors.push(
-            new faceapi.LabeledFaceDescriptors(student.name, [det.descriptor])
-        );
+      presentCount.textContent = `${present.length} marked`;
+      pendingCount.textContent = `${pending.length} pending`;
+      summaryPill.textContent = `Present: ${present.length} · Pending: ${pending.length}`;
     }
 
-    startCamera(labeledDescriptors);
-}
+    function showMessage(type, text, label = "Status") {
+      messageBox.style.display = "block";
+      messageBox.className = type === "success" ? "success" : "error";
+      messageBox.innerHTML = `<span class="msg-label">${label}</span>${text}`;
+    }
 
-// Start Camera + Recognition
-async function startCamera(labeledFaces) {
+    function clearMessage() {
+      messageBox.style.display = "none";
+    }
 
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
+    function setCameraStatus(on, text) {
+      cameraDot.classList.toggle("on", on);
+      cameraStatusText.textContent = text;
+    }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
+    function setModelStatus(statusText, statusType) {
+      modelStatusText.textContent = statusText;
+      modelDot.classList.remove("ready", "error");
+      if (statusType === "ready") {
+        modelDot.classList.add("ready");
+      } else if (statusType === "error") {
+        modelDot.classList.add("error");
+      }
+    }
 
-    video.onplay = () => {
-        const displaySize = { width: video.clientWidth, height: video.clientHeight };
+    // ========= ATTENDANCE =========
+    function markAttendance(name) {
+      if (!pending.includes(name)) return;
 
-        canvas.width = displaySize.width;
-        canvas.height = displaySize.height;
+      const now = Date.now();
+      const last = recentMarked.get(name) || 0;
+      if (now - last < RECENT_COOLDOWN_MS) return;
+      recentMarked.set(name, now);
 
-        const matcher = new faceapi.FaceMatcher(labeledFaces, 0.43);
+      present.push(name);
+      pending = pending.filter(n => n !== name);
+      updateDashboard();
 
-        setInterval(async () => {
+      const time = new Date().toLocaleTimeString();
+      lastMarkedPill.textContent = `Last marked: ${name} at ${time}`;
 
-            const detections = await faceapi.detectAllFaces(
-                video,
-                new faceapi.TinyFaceDetectorOptions()
-            ).withFaceLandmarks().withFaceDescriptors();
+      showMessage(
+        "success",
+        `✅ <span class="msg-name">${name}</span> attendance taken successfully at ${time}.`,
+        "Attendance recorded"
+      );
+    }
 
-            const resized = faceapi.resizeResults(detections, displaySize);
+    function resetAttendance() {
+      present = [];
+      pending = students.map(s => s.name);
+      recentMarked.clear();
+      updateDashboard();
+      lastMarkedPill.textContent = "Last marked: —";
+      clearMessage();
+    }
 
-            const ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // ========= MODELS & FACES =========
+    async function loadModelsAndFaces() {
+      try {
+        setModelStatus("Models loading…", "");
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri("models"),
+          faceapi.nets.faceLandmark68Net.loadFromUri("models"),
+          faceapi.nets.faceRecognitionNet.loadFromUri("models")
+        ]);
 
-            resized.forEach(result => {
-                const match = matcher.findBestMatch(result.descriptor).label;
-                const box = result.detection.box;
+        const labeledDescriptors = [];
+        for (const s of students) {
+          const img = await faceapi.fetchImage(s.file);
+          const det = await faceapi
+            .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
 
-                // Draw green box
-                ctx.strokeStyle = "#4ade80";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(box.x, box.y, box.width, box.height);
+          if (!det) {
+            console.warn("No face found in reference image for:", s.name);
+            continue;
+          }
 
-                ctx.fillStyle = "#4ade80";
-                ctx.fillText(match, box.x, box.y - 5);
+          labeledDescriptors.push(
+            new faceapi.LabeledFaceDescriptors(s.name, [det.descriptor])
+          );
+        }
 
-                // ATTENDANCE
-                if (match !== "unknown" && pending.includes(match)) {
-                    present.push(match);
-                    pending = pending.filter(name => name !== match);
-                    updateLists();
-                    showMessage("success", `✔ Attendance taken for <b>${match}</b>`);
-                }
-            });
+        faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, MATCH_THRESHOLD);
+        modelsLoaded = true;
+        setModelStatus("Models loaded · Ready ✔", "ready");
+      } catch (err) {
+        console.error("Model load error:", err);
+        setModelStatus("Model error – check /models folder", "error");
+        showMessage(
+          "error",
+          "Could not load face recognition models from the /models folder.",
+          "Model load failed"
+        );
+      }
+    }
 
-        }, 300);
-    };
-}
+    // ========= CAMERA & DETECTION =========
+    async function startCamera() {
+      if (!modelsLoaded) {
+        showMessage(
+          "error",
+          "Please wait until the badge at top right becomes green: 'Models loaded · Ready ✔'.",
+          "Models not ready"
+        );
+        return;
+      }
 
-</script>
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showMessage(
+            "error",
+            "Your browser does not support camera access. Use Chrome / Edge on desktop or Android.",
+            "Camera unsupported"
+          );
+          return;
+        }
 
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+
+        await new Promise(resolve => {
+          video.onloadedmetadata = () => {
+            video.play();
+            resolve();
+          };
+        });
+
+        overlay.width = video.videoWidth;
+        overlay.height = video.videoHeight;
+
+        setCameraStatus(true, "Camera active");
+        clearMessage();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        startDetectionLoop();
+      } catch (err) {
+        console.error("Camera error:", err);
+        showMessage(
+          "error",
+          "Could not access webcam. Please allow permission or check browser settings.",
+          "Camera error"
+        );
+        setCameraStatus(false, "Camera error");
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      if (detectionIntervalId) {
+        clearInterval(detectionIntervalId);
+        detectionIntervalId = null;
+      }
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+      setCameraStatus(false, "Camera stopped");
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    }
+
+    function startDetectionLoop() {
+      const options = new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 });
+
+      detectionIntervalId = setInterval(async () => {
+        if (!faceMatcher || !video.videoWidth) return;
+
+        const detections = await faceapi
+          .detectAllFaces(video, options)
+          .withFaceLandmarks()
+          .withFaceDescriptors();
+
+        const dims = { width: overlay.width, height: overlay.height };
+        const resized = faceapi.resizeResults(detections, dims);
+
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+        resized.forEach(res => {
+          const bestMatch = faceMatcher.findBestMatch(res.descriptor);
+          const label = bestMatch.label;
+          const box = res.detection.box;
+
+          ctx.strokeStyle = label === "unknown" ? "#f97316" : "#22c55e";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+          ctx.fillStyle = "rgba(15,23,42,0.9)";
+          ctx.fillRect(box.x, box.y - 16, box.width, 16);
+
+          ctx.fillStyle = "#e5e7eb";
+          ctx.font = "11px system-ui";
+          ctx.fillText(label, box.x + 4, box.y - 4);
+
+          if (label !== "unknown") {
+            markAttendance(label);
+          }
+        });
+      }, DETECTION_INTERVAL_MS);
+    }
+
+    // ========= EVENTS =========
+    startBtn.addEventListener("click", startCamera);
+    stopBtn.addEventListener("click", stopCamera);
+    resetBtn.addEventListener("click", resetAttendance);
+
+    // ========= INIT =========
+    updateDashboard();
+    setCameraStatus(false, "Camera idle");
+    loadModelsAndFaces();
+  </script>
 </body>
 </html>
